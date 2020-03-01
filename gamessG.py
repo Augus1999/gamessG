@@ -16,12 +16,16 @@ class UiMainWindow(object):
         self.pushButton1 = QtWidgets.QPushButton(self.central_widget)
         self.pushButton2 = QtWidgets.QPushButton(self.central_widget)
         MainWindow.setWindowIcon(QtGui.QIcon('.\\ico\\base.png'))
-        with open('gamessGd.csv', 'r', encoding='utf-8') as f:
-            _dir = f.read()
-        self.gamess_dir = _dir.split('\n')[0]
-        self.out_dir = _dir.split('\n')[1]
-        if not os.path.exists(self.out_dir):
-            os.makedirs(self.out_dir)
+        try:
+            with open('gamessGd.csv', 'r', encoding='utf-8') as f:
+                _dir = f.readlines()
+            self.gamess_dir = _dir[0].strip('\n')
+            self.out_dir = _dir[1].strip('\n')
+            if not os.path.exists(self.out_dir):
+                os.makedirs(self.out_dir)
+        except FileNotFoundError:
+            QMessageBox.warning(None, "Error", "Cannot find gamessGd.",
+                                QMessageBox.Yes | QMessageBox.No)
 
     def setup_ui(self, main_window):
         main_window.setObjectName("MainWindow")
@@ -30,6 +34,7 @@ class UiMainWindow(object):
         main_window.setStyleSheet("background-color: rgb(255, 255, 255);")
         main_window.setFixedSize(main_window.width(), main_window.height())
         main_window.setLocale(QtCore.QLocale(QtCore.QLocale.Chinese, QtCore.QLocale.Taiwan))
+        # Taiwan is NOT a part of China!
         self.pushButton1.setGeometry(QtCore.QRect(10, 20, 30, 30))
         self.pushButton2.setGeometry(QtCore.QRect(30, 60, 40, 30))
         self.textEdit.setGeometry(QtCore.QRect(70, 20, 500, 50))
@@ -48,6 +53,7 @@ class UiMainWindow(object):
                                     "font: 20pt \"Adobe Arabic\";\n"
                                     "border-radius:20px;\n")
         self.pushButton1.setLocale(QtCore.QLocale(QtCore.QLocale.Chinese, QtCore.QLocale.Taiwan))
+        self.pushButton2.setLocale(QtCore.QLocale(QtCore.QLocale.Chinese, QtCore.QLocale.Taiwan))
         self.textEdit.setLocale(QtCore.QLocale(QtCore.QLocale.Chinese, QtCore.QLocale.Taiwan))
         main_window.setCentralWidget(self.central_widget)
         self.re_translate_ui(main_window)
@@ -64,14 +70,15 @@ class UiMainWindow(object):
     def add(self):
         openfile_name, _ = QFileDialog.getOpenFileName(None, '選擇文件', self.cwd, 'gamess input files(*.inp)')
         if openfile_name != '':
-            file = openfile_name.split(r'/')[-1]
+            n_cpu, __ = QInputDialog.getInt(None, "processor", "processors:", 4, 0, 16, 1)  # get number of CPUs
+            file = openfile_name.split(r'/')[-1]  # get input file name without father dir
             _name = None  # this variable is for gamess version name
             for root, dirs, files in os.walk(self.gamess_dir):
                 for name in files:
                     if name.endswith('.exe') and name.startswith('gamess.'):  # find gamess.*.exe
                         _name = name.strip('.exe').strip('gamess.')  # get version name
                         break
-            cmd = self.gamess_dir+'\\rungms.bat'+' '+file+' '+_name+' 4 0 >'\
+            cmd = self.gamess_dir+'\\rungms.bat'+' '+file+' '+_name+' '+str(n_cpu)+' 0 >'\
                 + self.out_dir+'\\'+file.replace('.inp', '.log')  # command of rungms.bat
             copyfile(openfile_name, self.gamess_dir+'\\'+file)  # copy input file to gamess dir
             os.chdir(self.gamess_dir)  # cd to gamess dir
