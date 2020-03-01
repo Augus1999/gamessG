@@ -3,8 +3,6 @@
 import os
 import sys
 import subprocess as sp
-from time import sleep
-from subprocess import Popen, PIPE, STDOUT
 from shutil import copyfile
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox
@@ -60,38 +58,35 @@ class UiMainWindow(object):
         main_window.setWindowTitle(_translate("MainWindow", "gamessG"))
         self.pushButton1.setWhatsThis(_translate("MainWindow", "<html><head/><body><p>Add</p></body></html>"))
         self.pushButton2.setWhatsThis(_translate("MainWindow", "<html><head/><body><p>Open</p></body></html>"))
-        self.textEdit.setHtml(_translate("MainWindow", ''))
         self.pushButton1.clicked.connect(self.add)
         self.pushButton2.clicked.connect(self._open)
 
     def add(self):
         openfile_name, _ = QFileDialog.getOpenFileName(None, '選擇文件', self.cwd, 'gamess input files(*.inp)')
         if openfile_name != '':
-            self.textEdit.setPlainText(openfile_name)
             file = openfile_name.split(r'/')[-1]
-            _name = None
+            _name = None  # this variable is for gamess version name
             for root, dirs, files in os.walk(self.gamess_dir):
                 for name in files:
-                    if name.endswith('.exe') and name.startswith('gamess.'):
-                        _name = name.strip('.exe').strip('gamess.')
+                    if name.endswith('.exe') and name.startswith('gamess.'):  # find gamess.*.exe
+                        _name = name.strip('.exe').strip('gamess.')  # get version name
                         break
             cmd = self.gamess_dir+'\\rungms.bat'+' '+file+' '+_name+' 4 0 >'\
-                + self.out_dir+'\\'+file.replace('.inp', '.log')
-            copyfile(openfile_name, self.gamess_dir+'\\'+file)
-            os.chdir(self.gamess_dir)
-            sleep(1.0)
-            p = Popen(cmd, stdout=PIPE, stderr=STDOUT, shell=True)
-            while True:
-                line = p.stdout.readline()
-                MainWindow.setWindowTitle('gamessG* pending')
-                if not line:
-                    MainWindow.setWindowTitle('gamessG  finished')
-                    break
+                + self.out_dir+'\\'+file.replace('.inp', '.log')  # command of rungms.bat
+            copyfile(openfile_name, self.gamess_dir+'\\'+file)  # copy input file to gamess dir
+            os.chdir(self.gamess_dir)  # cd to gamess dir
+            self.textEdit.setPlainText(openfile_name)
+            MainWindow.setWindowTitle('gamessG* pending')
+            ret_cod = sp.call(cmd, shell=True)  # run rungms.bat
+            if ret_cod == 0:
+                MainWindow.setWindowTitle('gamessG  finished')
+            else:
+                MainWindow.setWindowTitle('gamessG  ERROR')
             os.remove(self.gamess_dir+'\\'+file)
 
     def _open(self):
         os.chdir(self.cwd)
-        ret_cod = sp.call('wxMacMolPlt.exe', shell=True)
+        ret_cod = sp.call('wxMacMolPlt.exe', shell=True)  # run wxMacMolPlt
         if ret_cod != 0:
             QMessageBox.warning(None, "Error", "Cannot find wxMacMolPlt.exe. \
                                                Please ensure it exists in Env Variables.",
