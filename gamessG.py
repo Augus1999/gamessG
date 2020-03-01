@@ -5,7 +5,7 @@ import sys
 import subprocess as sp
 from shutil import copyfile
 from PyQt5 import QtCore, QtWidgets, QtGui
-from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox, QInputDialog
 
 
 class UiMainWindow(object):
