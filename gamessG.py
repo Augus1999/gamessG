@@ -24,7 +24,7 @@ class UiMainWindow(object):
             if not os.path.exists(self.out_dir):
                 os.makedirs(self.out_dir)
         except FileNotFoundError:
-            QMessageBox.warning(None, "Error", "Cannot find gamessGd.",
+            QMessageBox.warning(None, "Error", "Cannot find gamessGd.csv",
                                 QMessageBox.Yes | QMessageBox.No)
 
     def setup_ui(self, main_window):
