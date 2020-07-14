@@ -2,6 +2,7 @@
 # Author Nianze A. TAO
 import os
 import sys
+import win32api
 import subprocess as sp
 from shutil import copyfile
 from PyQt5 import QtCore, QtWidgets, QtGui
@@ -11,6 +12,7 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox,
 class UiMainWindow(object):
     def __init__(self):
         self.cwd = os.getcwd()
+        self.files = str()
         self.central_widget = QtWidgets.QWidget(MainWindow)
         self.textEdit = QtWidgets.QTextEdit(self.central_widget)
         self.pushButton1 = QtWidgets.QPushButton(self.central_widget)
@@ -88,10 +90,13 @@ class UiMainWindow(object):
         openfile_names, _ = QFileDialog.getOpenFileNames(None, '選擇文件', self.cwd, 'gamess input files(*.inp)')
         file_number = len(openfile_names)
         if file_number != 0:
-            w = str()
+            w1, w2 = str(), str()
             for item in openfile_names:
-                w += (item+'\n')
-            self.textEdit.setPlainText(w)
+                o_item = self.out_dir+'\\'+item.split(r'/')[-1].replace('.inp', '.log')
+                w1 += (item+'\n')
+                w2 += (o_item+' ')
+            self.textEdit.setPlainText(w1)
+            self.files = w2
             n_cpu, __ = QInputDialog.getInt(None, 'processor', 'processors:', 4, 0, 16, 1)  # get number of CPUs
             if __ is True:  # if selection(s) confirmed
                 for key, openfile_name in enumerate(openfile_names):
@@ -102,7 +107,7 @@ class UiMainWindow(object):
                             if name.endswith('.exe') and name.startswith('gamess.'):  # find gamess.*.exe
                                 _name = name.strip('.exe').strip('gamess.')  # get version name
                                 break
-                    cmd = self.gamess_dir+'\\rungms.bat'+' '+file+' '+_name+' '+str(n_cpu)+' 0 >'\
+                    cmd = 'rungms.bat'+' '+file+' '+_name+' '+str(n_cpu)+' 0 >'\
                         + self.out_dir+'\\'+file.replace('.inp', '.log')  # command of rungms.bat
                     copyfile(openfile_name, self.gamess_dir+'\\'+file)  # copy input file to gamess dir
                     os.chdir(self.gamess_dir)  # cd to gamess dir
@@ -131,11 +136,15 @@ class UiMainWindow(object):
 
     def _open(self):
         # run wxMacMolPlt.exe
-        os.chdir(self.cwd)
-        ret_cod = sp.call('wxMacMolPlt.exe', shell=True)  # run wxMacMolPlt
-        if ret_cod != 0:
+        if len(self.files) == 0:
+            ret_cod = win32api.ShellExecute(0, 'open', 'wxMacMolPlt.exe',
+                                            '', '', 1)  # run wxMacMolPlt
+        else:
+            ret_cod = win32api.ShellExecute(0, 'open', 'wxMacMolPlt.exe',
+                                            self.files, '', 1)  # run wxMacMolPlt and open output files
+        if ret_cod != 42:
             QMessageBox.warning(None, 'Error', 'Cannot find wxMacMolPlt.exe. \
-                                               Please ensure it exists in Env Variables.',
+                                               Please ensure that it exists in Env Variables.',
                                 QMessageBox.Yes | QMessageBox.No)
 
 
