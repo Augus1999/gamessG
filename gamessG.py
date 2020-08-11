@@ -136,12 +136,8 @@ class UiMainWindow(object):
 
     def _open(self):
         # run wxMacMolPlt.exe
-        if len(self.files) == 0:
-            ret_cod = win32api.ShellExecute(0, 'open', 'wxMacMolPlt.exe',
-                                            '', '', 1)  # run wxMacMolPlt
-        else:
-            ret_cod = win32api.ShellExecute(0, 'open', 'wxMacMolPlt.exe',
-                                            self.files, '', 1)  # run wxMacMolPlt and open output files
+        ret_cod = win32api.ShellExecute(0, 'open', 'wxMacMolPlt.exe',
+                                            self.files, '', 1)  # run wxMacMolPlt and open output files if have
         if ret_cod != 42:
             QMessageBox.warning(None, 'Error', 'Cannot find wxMacMolPlt.exe. \
                                                Please ensure that it exists in Env Variables.',
