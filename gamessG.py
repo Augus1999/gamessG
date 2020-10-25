@@ -3,6 +3,8 @@
 import os
 import sys
 import win32api
+# import pywintypes  # if used in pyinstaller
+# import PyQt5.sip  # if used in pyinstaller
 import subprocess as sp
 from shutil import copyfile
 from PyQt5 import QtCore, QtWidgets, QtGui
@@ -22,17 +24,17 @@ class UiMainWindow(object):
         try:
             with open('gamessGd.gm', 'r', encoding='utf-8') as f:
                 _dir = f.readlines()
-            for _line in _dir:
-                if 'GAMESSDIR' in _line:  # find gamess dir
-                    self.gamess_dir = _line.strip('\n').split('=')[1]
-                if 'OUTDIR' in _line:  # find output dir
-                    self.out_dir = _line.strip('\n').split('=')[1]
-            if not os.path.exists(self.out_dir):
-                os.makedirs(self.out_dir)
         except FileNotFoundError:
             QMessageBox.warning(None, 'Error', 'Cannot find gamessGd.gm',
                                 QMessageBox.Yes | QMessageBox.No)
             MainWindow.close()
+        for _line in _dir:
+            if 'GAMESSDIR' in _line:  # find gamess dir
+                self.gamess_dir = _line.strip('\n').split('=')[1]
+            if 'OUTDIR' in _line:  # find output dir
+                self.out_dir = _line.strip('\n').split('=')[1]
+        if not os.path.exists(self.out_dir):
+            os.makedirs(self.out_dir)
 
     def setup_ui(self, main_window):
         main_window.setObjectName('MainWindow')
