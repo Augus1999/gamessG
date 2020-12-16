@@ -2,13 +2,18 @@
 # Author Nianze A. TAO
 import os
 import sys
-import win32api
-# import pywintypes  # if used in pyinstaller
 # import PyQt5.sip  # if used in pyinstaller
 import subprocess as sp
 from shutil import copyfile
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox, QInputDialog
+
+
+'''
+warning: the OUTDIR in gamessG.gm should 
+contain NO other characters except ENGLISH letters,
+or wxMacMolPlt.exe will NOT run correctly.
+'''
 
 
 class UiMainWindow(object):
@@ -24,10 +29,10 @@ class UiMainWindow(object):
         try:
             with open('gamessGd.gm', 'r', encoding='utf-8') as f:
                 _dir = f.readlines()
-        except FileNotFoundError:
+        except FileNotFoundError:  # do this first
             QMessageBox.warning(None, 'Error', 'Cannot find gamessGd.gm',
                                 QMessageBox.Yes | QMessageBox.No)
-            MainWindow.close()
+            exit()
         for _line in _dir:
             if 'GAMESSDIR' in _line:  # find gamess dir
                 self.gamess_dir = _line.strip('\n').split('=')[1]
@@ -99,6 +104,7 @@ class UiMainWindow(object):
                 w2 += (o_item+' ')
             self.textEdit.setPlainText(w1)
             self.files = w2
+            '''ignore the warning here.'''
             n_cpu, __ = QInputDialog.getInt(None, 'processor', 'processors:', 4, 0, 16, 1)  # get number of CPUs
             if __ is True:  # if selection(s) confirmed
                 for key, openfile_name in enumerate(openfile_names):
@@ -120,8 +126,8 @@ class UiMainWindow(object):
                     if ret_cod == 1:
                         MainWindow.setWindowTitle('gamessG  ERROR')
                     os.remove(self.gamess_dir+'\\'+file)
-                else:
-                    pass
+        else:
+            pass
 
     def _clean(self):
         # delete all restart files.
@@ -138,11 +144,11 @@ class UiMainWindow(object):
 
     def _open(self):
         # run wxMacMolPlt.exe
-        ret_cod = win32api.ShellExecute(0, 'open', 'wxMacMolPlt.exe',
-                                            self.files, '', 1)  # run wxMacMolPlt and open output files if have
-        if ret_cod != 42:
+        try:
+            sp.Popen('wxMacMolPlt.exe '+self.files)  # run wxMacMolPlt and open output files if have
+        except FileNotFoundError:
             QMessageBox.warning(None, 'Error', 'Cannot find wxMacMolPlt.exe. \
-                                               Please ensure that it exists in Env Variables.',
+                                                           Please ensure that it exists in Env Variables.',
                                 QMessageBox.Yes | QMessageBox.No)
 
 
