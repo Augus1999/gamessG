@@ -2,6 +2,7 @@
 # Author Nianze A. TAO
 import os
 import sys
+import json
 # import PyQt5.sip  # if used in pyinstaller
 import subprocess as sp
 from shutil import copyfile
@@ -27,17 +28,14 @@ class UiMainWindow(object):
         self.pushButton3 = QtWidgets.QPushButton(self.central_widget)
         MainWindow.setWindowIcon(QtGui.QIcon('.\\ico\\base.png'))
         try:
-            with open('gamessGd.gm', 'r', encoding='utf-8') as f:
-                _dir = f.readlines()
+            with open('settings.json', 'r', encoding='utf-8') as f:
+                content = json.load(f)
         except FileNotFoundError:  # do this first
-            QMessageBox.warning(None, 'Error', 'Cannot find gamessGd.gm',
+            QMessageBox.warning(None, 'Error', 'Cannot find settings.json',
                                 QMessageBox.Yes | QMessageBox.No)
             exit()
-        for _line in _dir:
-            if 'GAMESSDIR' in _line:  # find gamess dir
-                self.gamess_dir = _line.strip('\n').split('=')[1]
-            if 'OUTDIR' in _line:  # find output dir
-                self.out_dir = _line.strip('\n').split('=')[1]
+        self.gamess_dir = content['GAMESSDIR']
+        self.out_dir = content['OUTDIR']
         if not os.path.exists(self.out_dir):
             os.makedirs(self.out_dir)
 
